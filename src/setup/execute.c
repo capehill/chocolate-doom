@@ -253,6 +253,12 @@ static int ExecuteCommand(const char *program, const char *arg)
     return result;
 }
 
+#elif defined(__amigaos4__)
+#warning "no fork()!"
+static int ExecuteCommand(const char *program, const char *arg)
+{
+    return 0;
+}
 #else
 
 // Given the specified program name, get the full path to the program,

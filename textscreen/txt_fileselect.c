@@ -483,6 +483,19 @@ char *TXT_SelectFile(char *window_title, char **extensions)
     return result;
 }
 
+#elif defined(__amigaos4__)
+
+#warning "Implementation missing!"
+
+int TXT_CanSelectFiles(void)
+{
+     return 1;
+}
+
+char *TXT_SelectFile(char *window_title, char **extensions)
+{
+     return NULL;
+}
 #else
 
 // Linux version: invoke the Zenity command line program to pop up a
