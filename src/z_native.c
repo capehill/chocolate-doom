@@ -18,7 +18,7 @@
 //	This is an implementation of the zone memory API which
 //	uses native calls to malloc() and free().
 //
-
+#ifdef NATIVE
 
 #include <stdlib.h>
 #include <string.h>
@@ -496,3 +496,4 @@ unsigned int Z_ZoneSize(void)
     return 0;
 }
 
+#endif

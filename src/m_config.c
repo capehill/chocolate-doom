@@ -2150,8 +2150,9 @@ float M_GetFloatVariable(char *name)
 
 static char *GetDefaultConfigDir(void)
 {
-#if !defined(_WIN32) || defined(_WIN32_WCE)
-
+#if defined(_WIN32) || defined(_WIN32_WCE) || defined(__amigaos4__)
+    return M_StringDuplicate("");
+#else
     // Configuration settings are stored in an OS-appropriate path
     // determined by SDL.  On typical Unix systems, this might be
     // ~/.local/share/chocolate-doom.  On Windows, we behave like
@@ -2162,7 +2163,6 @@ static char *GetDefaultConfigDir(void)
     result = SDL_GetPrefPath("", PACKAGE_TARNAME);
     return result;
 #endif /* #ifndef _WIN32 */
-    return M_StringDuplicate("");
 }
 
 // 

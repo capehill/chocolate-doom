@@ -14,6 +14,8 @@
 // Code specific to the standalone dedicated server.
 //
 
+#ifdef DEDICATED
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -45,3 +47,4 @@ void D_DoomMain(void)
     NET_DedicatedServer();
 }
 
+#endif

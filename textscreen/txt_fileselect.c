@@ -40,7 +40,7 @@ struct txt_fileselect_s {
 
 char *TXT_DIRECTORY[] = { "__directory__", NULL };
 
-#ifndef _WIN32
+#if !defined( _WIN32 ) && !defined(__amigaos4__)
 
 #include <fcntl.h>
 #include <unistd.h>
