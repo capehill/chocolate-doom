@@ -1,11 +1,11 @@
 # Makefile for AmigaOS 4
 
-HEADERS=../ ../src /SDK/local/newlib/include/SDL2
+HEADERS=../ ../src ../textscreen ../opl ../pcsound /SDK/local/newlib/include/SDL2
 INCLUDES=$(addprefix -I, $(HEADERS))
 
 DEFINES=
 
-CFLAGS=-O0 -ggdb $(INCLUDES) $(DEFINES) -Wall
+CFLAGS=-O3 -ggdb $(INCLUDES) $(DEFINES) -Wall
 
 export # pass the variables to submakes
 
