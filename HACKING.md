@@ -38,6 +38,9 @@ Variables should be named like this: `my_variable_name`, not like this:
 `MyVariableName`.  In pointer variable declarations, place the `*` next
 to the variable name, not the type.
 
+When casting variables from one type to another, put a space after the
+last closing brace.
+
 When using an if, do, while, or for statement, always use the { } braces
 even when they are not necessary.  For example, do this:
 
@@ -122,6 +125,30 @@ void FunctionName(int argument, int arg2, int arg3, int arg4, int arg5,
 }
 ```
 
+## Editor-specific default settings
+
+If you use vim, you can put this into your `.vimrc` (or install the
+`localvimrc` script):
+
+```
+set expandtab
+set tabstop=8
+set softtabstop=4
+set shiftwidth=4
+```
+
+Or, if you use Emacs, put this in your `.emacs`:
+
+```lisp
+(add-hook 'c-mode-hook (lambda ()
+  (when (and buffer-file-name
+             (string-match "chocolate-doom" buffer-file-name))
+    (c-set-style "bsd")
+    (setq indent-tabs-mode nil)
+    (setq tab-width 8)
+    (setq c-basic-offset 4))))
+```
+
 ## Security
 
 The C standard library has a number of unsafe functions that should be
@@ -139,6 +166,7 @@ Unsafe function   |   Safer alternative
 `strcat()`        |  `M_StringConcat()`
 `strncat()`       |  `M_StringConcat()`
 `strdup()`        |  `M_StringDuplicate()`
+`realloc()`       |  `I_Realloc()`
 
 Lots of the code includes calls to DEH_String() to simulate string
 replacement by the Dehacked tool. Be careful when using Dehacked
