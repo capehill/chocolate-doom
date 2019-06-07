@@ -128,6 +128,7 @@ int fullscreen = true;
 // Aspect ratio correction mode
 
 int aspect_ratio_correct = true;
+static int actualheight;
 
 // Force integer scales for resolution-independent rendering
 
@@ -188,6 +189,8 @@ static boolean window_focused = true;
 // Window resize state.
 
 static boolean need_resize = false;
+static unsigned int last_resize_time;
+#define RESIZE_DELAY 500
 
 // Gamma correction level to use
 
@@ -283,43 +286,25 @@ void I_StartFrame (void)
 
 }
 
-// Returns base screen height - either SCREENHEIGHT_4_3 or SCREENHEIGHT,
-// dependent on aspect_ratio_correct value.
-static int EffectiveScreenHeight(void)
-{
-    if (aspect_ratio_correct)
-    {
-        return SCREENHEIGHT_4_3;
-    }
-    else
-    {
-        return SCREENHEIGHT;
-    }
-}
-
 // Adjust window_width / window_height variables to be an an aspect
 // ratio consistent with the aspect_ratio_correct variable.
 static void AdjustWindowSize(void)
 {
-    int h;
-
-    h = EffectiveScreenHeight();
-
-    if (window_width * h <= window_height * SCREENWIDTH)
+    if (window_width * actualheight <= window_height * SCREENWIDTH)
     {
         // We round up window_height if the ratio is not exact; this leaves
         // the result stable.
-        window_height = (window_width * h + SCREENWIDTH - 1) / SCREENWIDTH;
+        window_height = (window_width * actualheight + SCREENWIDTH - 1) / SCREENWIDTH;
     }
     else
     {
-        window_width = window_height * SCREENWIDTH / h;
+        window_width = window_height * SCREENWIDTH / actualheight;
     }
 }
 
 static void HandleWindowEvent(SDL_WindowEvent *event)
 {
-    int i, flags;
+    int i;
 
     switch (event->event)
     {
@@ -335,18 +320,7 @@ static void HandleWindowEvent(SDL_WindowEvent *event)
 
         case SDL_WINDOWEVENT_RESIZED:
             need_resize = true;
-            // When the window is resized (we're not in fullscreen mode),
-            // save the new window size.
-            flags = SDL_GetWindowFlags(screen);
-            if ((flags & SDL_WINDOW_FULLSCREEN_DESKTOP) == 0)
-            {
-                SDL_GetWindowSize(screen, &window_width, &window_height);
-
-                // Adjust the window by resizing again so that the window
-                // is the right aspect ratio.
-                AdjustWindowSize();
-                SDL_SetWindowSize(screen, window_width, window_height);
-            }
+            last_resize_time = SDL_GetTicks();
             break;
 
         // Don't render the screen when the window is minimized:
@@ -589,10 +563,11 @@ static void LimitTextureSize(int *w_upscale, int *h_upscale)
                 rinfo.max_texture_width, rinfo.max_texture_height);
     }
 
-    // We limit the amount of texture memory used for the intermediate buffer.
-    // By default we limit to 1600x1200, which gives pretty good results, but
-    // we allow the user to override this and use more if they want to use
-    // even more (or less, if their graphics card can't handle it).
+    // We limit the amount of texture memory used for the intermediate buffer,
+    // since beyond a certain point there are diminishing returns. Also,
+    // depending on the hardware there may be performance problems with very
+    // huge textures, so the user can use this to reduce the maximum texture
+    // size if desired.
 
     if (max_scaling_buffer_pixels < SCREENWIDTH * SCREENHEIGHT)
     {
@@ -626,7 +601,6 @@ static void LimitTextureSize(int *w_upscale, int *h_upscale)
 
 static void CreateUpscaledTexture(boolean force)
 {
-    const int actualheight = EffectiveScreenHeight();
     int w, h;
     int h_upscale, w_upscale;
     static int h_upscale_old, w_upscale_old;
@@ -721,9 +695,29 @@ void I_FinishUpdate (void)
 
     if (need_resize)
     {
-        CreateUpscaledTexture(false);
-        need_resize = false;
-        palette_to_set = true;
+        if (SDL_GetTicks() > last_resize_time + RESIZE_DELAY)
+        {
+            int flags;
+            // When the window is resized (we're not in fullscreen mode),
+            // save the new window size.
+            flags = SDL_GetWindowFlags(screen);
+            if ((flags & SDL_WINDOW_FULLSCREEN_DESKTOP) == 0)
+            {
+                SDL_GetWindowSize(screen, &window_width, &window_height);
+
+                // Adjust the window by resizing again so that the window
+                // is the right aspect ratio.
+                AdjustWindowSize();
+                SDL_SetWindowSize(screen, window_width, window_height);
+            }
+            CreateUpscaledTexture(false);
+            need_resize = false;
+            palette_to_set = true;
+        }
+        else
+        {
+            return;
+        }
     }
 
     UpdateGrab();
@@ -906,7 +900,7 @@ static void SetScaleFactor(int factor)
     // Pick 320x200 or 320x240, depending on aspect ratio correct
 
     window_width = factor * SCREENWIDTH;
-    window_height = factor * EffectiveScreenHeight();
+    window_height = factor * actualheight;
     fullscreen = false;
 }
 
@@ -1201,7 +1195,7 @@ static void SetVideoMode(void)
 
         pixel_format = SDL_GetWindowPixelFormat(screen);
 
-        SDL_SetWindowMinimumSize(screen, SCREENWIDTH, EffectiveScreenHeight());
+        SDL_SetWindowMinimumSize(screen, SCREENWIDTH, actualheight);
 
         I_InitWindowTitle();
         I_InitWindowIcon();
@@ -1226,6 +1220,7 @@ static void SetVideoMode(void)
     if (force_software_renderer)
     {
         renderer_flags |= SDL_RENDERER_SOFTWARE;
+        renderer_flags &= ~SDL_RENDERER_PRESENTVSYNC;
     }
 
     if (renderer != NULL)
@@ -1247,7 +1242,7 @@ static void SetVideoMode(void)
 
     SDL_RenderSetLogicalSize(renderer,
                              SCREENWIDTH,
-                             EffectiveScreenHeight());
+                             actualheight);
 
     // Force integer scales for resolution-independent rendering.
 
@@ -1368,6 +1363,15 @@ void I_InitGraphics(void)
     if (screensaver_mode)
     {
         fullscreen = true;
+    }
+
+    if (aspect_ratio_correct)
+    {
+        actualheight = SCREENHEIGHT_4_3;
+    }
+    else
+    {
+        actualheight = SCREENHEIGHT;
     }
 
     // Create the game window; this may switch graphic modes depending

@@ -68,6 +68,7 @@ i_endoom.c           i_endoom.h            \
 i_input.c            i_input.h             \
 i_joystick.c         i_joystick.h          \
                      i_swap.h              \
+i_midipipe.c         i_midipipe.h          \
 i_oplmusic.c                               \
 i_pcsound.c                                \
 i_sdlmusic.c                               \
@@ -166,6 +167,20 @@ endif
 
 $(SETUP_BINARIES): @PROGRAM_PREFIX@setup$(EXEEXT)
 	cp @PROGRAM_PREFIX@setup$(EXEEXT) $@
+
+# Make "make" aware of convenience libraries in subdirectories
+
+doom/libdoom.a:
+	$(MAKE) -C doom
+
+heretic/libheretic.a:
+	$(MAKE) -C heretic
+
+hexen/libhexen.a:
+	$(MAKE) -C hexen
+
+strife/libstrife.a:
+	$(MAKE) -C strife
 
 # Source files needed for chocolate-setup:
 

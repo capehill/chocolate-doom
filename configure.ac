@@ -1,4 +1,4 @@
-AC_INIT(Chocolate Doom, 3.0.0-beta1,
+AC_INIT(Chocolate Doom, 3.0.0,
         chocolate-doom-dev-list@chocolate-doom.org, chocolate-doom)
 
 PACKAGE_SHORTNAME=${PACKAGE_NAME% Doom}
@@ -77,6 +77,7 @@ AC_CHECK_LIB(m, log)
 
 AC_CHECK_HEADERS([linux/kd.h dev/isa/spkrio.h dev/speaker/speaker.h])
 AC_CHECK_FUNCS(mmap ioperm)
+AC_CHECK_DECLS([strcasecmp, strncasecmp], [], [], [[#include <strings.h>]])
 
 # OpenBSD I/O i386 library for I/O port access.
 # (64 bit has the same thing with a different name!)
@@ -156,6 +157,7 @@ man/bash-completion/doom.template
 man/bash-completion/heretic.template
 man/bash-completion/hexen.template
 man/bash-completion/strife.template
+midiproc/Makefile
 opl/Makefile
 opl/examples/Makefile
 pcsound/Makefile
